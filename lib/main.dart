@@ -28,27 +28,33 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
 
     return MaterialApp(
       title: 'Task Manager',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: authState.when(
-        data: (user) {
-          if (user != null) {
-            return const ProjectDashboardScreen(key: ValueKey('dashboard'));
-          } else {
-            return const LoginScreen(key: ValueKey('login'));
-          }
+      home: Consumer(
+        builder: (context, ref, _) {
+          final authState = ref.watch(authNotifierProvider);
+          
+          return authState.when(
+            data: (user) {
+              if (user != null) {
+                return const ProjectDashboardScreen(key: ValueKey('dashboard'));
+              }
+              return const LoginScreen(key: ValueKey('login'));
+            },
+            loading: () {
+              if (authState.hasValue) {
+                return authState.valueOrNull != null
+                    ? const ProjectDashboardScreen(key: ValueKey('dashboard'))
+                    : const LoginScreen(key: ValueKey('login'));
+              }
+              return const SplashScreen(key: ValueKey('splash'));
+            },
+            error: (err, stack) => const LoginScreen(key: ValueKey('login')),
+          );
         },
-        // Only show splash screen on initial startup (no data yet)
-        loading: () => authState.hasValue 
-            ? (authState.valueOrNull != null 
-                ? const ProjectDashboardScreen(key: ValueKey('dashboard')) 
-                : const LoginScreen(key: ValueKey('login')))
-            : const SplashScreen(key: ValueKey('splash')),
-        error: (err, stack) => const LoginScreen(key: ValueKey('login')),
       ),
     );
   }

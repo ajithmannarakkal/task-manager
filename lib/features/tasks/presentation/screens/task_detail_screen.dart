@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/presentation/widgets/common_button.dart';
+import '../../../../core/presentation/widgets/common_text_field.dart';
 import '../../domain/entities/task.dart';
 import '../providers/task_provider.dart';
 
@@ -76,13 +78,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       final updatedTask = widget.task!.copyWith(comments: newComments);
       ref.read(taskBoardProvider(widget.projectId).notifier).updateTask(updatedTask);
       _commentController.clear();
-      // Optimistic update handled by provider, but we might want to close or refresh
-      // Since we are monitoring the task stream in board, this screen might not update automatically 
-      // if it just holds the old 'task' widget. 
-      // Ideally, we passed 'task' as a value.
-      // We should probably rely on the board to reload or just update local state if we want to see it here.
-      // But for now, adding a comment and popping back to board is acceptable for this scope.
-       Navigator.pop(context);
+      Navigator.pop(context);
     }
   }
 
@@ -91,36 +87,28 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Task' : 'New Task'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveChanges,
-          ),
-        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: CommonButton(
+          onPressed: _saveChanges,
+          text: _isEditing ? 'Save Changes' : 'Create Task',
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
+            CommonTextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Task Title',
-                border: OutlineInputBorder(),
-                filled: true,
-              ),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              labelText: 'Task Title',
+              validator: null,
             ),
             const SizedBox(height: 20),
-            TextField(
+            CommonTextField(
               controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(),
-                filled: true,
-              ),
+              labelText: 'Description',
               maxLines: 5,
             ),
             const SizedBox(height: 20),
@@ -145,7 +133,22 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Due Date'),
+              subtitle: Text('${_dueDate.day}/${_dueDate.month}/${_dueDate.year}'),
+              trailing: const Icon(Icons.calendar_today),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _dueDate,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (picked != null) setState(() => _dueDate = picked);
+              },
+            ),
             if (_isEditing) ...[
               const Divider(thickness: 2),
               const SizedBox(height: 10),

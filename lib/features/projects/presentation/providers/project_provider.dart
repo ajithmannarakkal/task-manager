@@ -91,4 +91,13 @@ class ProjectNotifier extends AsyncNotifier<List<Project>> {
       );
     }
   }
+
+  void updateProject(Project updatedProject) {
+    final current = state.value;
+    if (current != null) {
+      state = AsyncValue.data(
+        current.map((p) => p.id == updatedProject.id ? updatedProject : p).toList(),
+      );
+    }
+  }
 }

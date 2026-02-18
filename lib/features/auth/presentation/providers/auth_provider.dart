@@ -41,6 +41,9 @@ final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, AuthUser?>(() {
 class AuthNotifier extends AsyncNotifier<AuthUser?> {
   @override
   Future<AuthUser?> build() async {
+    // Artificial delay to show the splash screen
+    await Future.delayed(const Duration(seconds: 2));
+    
     final checkAuthStatus = ref.read(checkAuthStatusUseCaseProvider);
     final result = await checkAuthStatus(const NoParams());
     

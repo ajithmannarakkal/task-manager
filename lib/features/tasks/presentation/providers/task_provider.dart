@@ -176,6 +176,12 @@ class TaskBoardNotifier extends FamilyAsyncNotifier<List<Task>, String> {
           );
           // Cancel due-date reminders since task is done
           notifications.cancelNotification(task.id.hashCode);
+        } else if (newStatus != task.status) {
+          // Notify for other status changes (e.g. To Do -> In Progress)
+          notifications.notifyTaskUpdated(
+            task.title,
+            id: task.id.hashCode,
+          );
         }
       },
     );

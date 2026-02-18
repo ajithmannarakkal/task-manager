@@ -15,7 +15,7 @@ class SplashScreen extends StatelessWidget {
             const Icon(Icons.task_alt, size: 80, color: Colors.white),
             const SizedBox(height: 16),
             Text(
-              'Task Manager',
+              'Task Manger',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

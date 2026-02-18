@@ -30,7 +30,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     return MaterialApp(
-      title: 'Task Manager',
+      title: 'Task Manger',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: Consumer(

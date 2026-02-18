@@ -143,8 +143,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                           items: TaskStatus.values
                               .map((s) => DropdownMenuItem(
                                     value: s,
-                                    child: Text(s.name,
-                                        style: const TextStyle(fontSize: 14)),
+                                    child: Text(
+                                      s.name[0].toUpperCase() + s.name.substring(1),
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   ))
                               .toList(),
                           onChanged: (val) => setState(() => _status = val!),
@@ -177,9 +179,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(p.name,
-                                            style:
-                                                const TextStyle(fontSize: 14)),
+                                        Text(
+                                          p.name[0].toUpperCase() + p.name.substring(1),
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
                                       ],
                                     ),
                                   ))

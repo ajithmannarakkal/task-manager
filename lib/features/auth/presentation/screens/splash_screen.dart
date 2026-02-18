@@ -13,29 +13,44 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
-    _navigateAfterDelay();
+    // Minimum splash display time
+    Future.delayed(const Duration(seconds: 2), _checkAuthAndNavigate);
   }
 
-  Future<void> _navigateAfterDelay() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+  Future<void> _checkAuthAndNavigate() async {
+    if (_hasNavigated || !mounted) return;
 
+    // Read auth status from secure storage via the provider
     final authState = ref.read(authNotifierProvider);
-    authState.whenData((user) {
-      if (!mounted) return;
-      if (user != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
-    });
+
+    // If still loading, wait for it to complete
+    if (authState.isLoading) {
+      ref.listenManual(authNotifierProvider, (_, next) {
+        if (!next.isLoading && !_hasNavigated) {
+          _navigate(next.valueOrNull != null);
+        }
+      });
+    } else {
+      _navigate(authState.valueOrNull != null);
+    }
+  }
+
+  void _navigate(bool isLoggedIn) {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => isLoggedIn
+            ? const ProjectDashboardScreen()
+            : const LoginScreen(),
+      ),
+    );
   }
 
   @override
@@ -55,7 +70,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+            Text(
+              'Organize your work, simplify your life',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
+            ),
+            const SizedBox(height: 48),
             const CircularProgressIndicator(color: Colors.white),
           ],
         ),

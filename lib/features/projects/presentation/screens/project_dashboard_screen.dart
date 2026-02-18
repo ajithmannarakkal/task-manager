@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/presentation/widgets/confirmation_bottom_sheet.dart';
 import '../../../tasks/presentation/screens/task_board_screen.dart';
 import '../../domain/entities/project.dart';
 import '../providers/project_provider.dart';
@@ -18,8 +19,16 @@ class ProjectDashboardScreen extends ConsumerWidget {
         title: const Text('My Projects'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _showLogoutConfirmation(context, ref),
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Logout',
+            onPressed: () => ConfirmationBottomSheet.show(
+              context: context,
+              icon: Icons.logout_rounded,
+              title: 'Logout',
+              message: 'Are you sure you want to logout?\nYou will need to sign in again.',
+              confirmLabel: 'Logout',
+              onConfirm: () => ref.read(authNotifierProvider.notifier).logout(),
+            ),
           ),
         ],
       ),
@@ -30,22 +39,26 @@ class ProjectDashboardScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.folder_open, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.folder_open_rounded, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  Text('No Projects Yet',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(color: Colors.grey)),
+                  Text(
+                    'No Projects Yet',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(color: Colors.grey[400]),
+                  ),
                   const SizedBox(height: 8),
-                  const Text('Create one to get started!',
-                      style: TextStyle(color: Colors.grey)),
+                  Text(
+                    'Tap + to create your first project',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  ),
                 ],
               ),
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.only(top: 16, bottom: 80),
+            padding: const EdgeInsets.only(top: 16, bottom: 100),
             itemCount: projects.length,
             itemBuilder: (context, index) {
               final project = projects[index];
@@ -68,62 +81,6 @@ class ProjectDashboardScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.logout, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text(
-                'Logout',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Are you sure you want to logout?',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ref.read(authNotifierProvider.notifier).logout();
-                      },
-                      child: const Text('Logout'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _ProjectCard extends ConsumerWidget {
@@ -138,6 +95,7 @@ class _ProjectCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF0F0F0)),
         boxShadow: [
           BoxShadow(
             // ignore: deprecated_member_use
@@ -158,19 +116,22 @@ class _ProjectCard extends ConsumerWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
+                // Project color icon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     // ignore: deprecated_member_use
-                    color: project.color.withOpacity(0.1),
+                    color: project.color.withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.folder_rounded, color: project.color, size: 28),
+                  child: Icon(Icons.folder_rounded, color: project.color, size: 26),
                 ),
                 const SizedBox(width: 16),
+
+                // Project info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,37 +139,78 @@ class _ProjectCard extends ConsumerWidget {
                       Text(
                         project.name,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold, fontSize: 15),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tap to view tasks',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                      ),
+                      if (project.description.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          project.description,
+                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[400]),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => CreateProjectScreen(project: project)),
-                      );
-                    } else if (value == 'delete') {
-                      ref
-                          .read(projectListProvider.notifier)
-                          .deleteProject(project.id);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    const PopupMenuItem(
+
+                // Popup menu with white background
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    popupMenuTheme: const PopupMenuThemeData(
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  child: PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert_rounded, color: Colors.grey[400]),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => CreateProjectScreen(project: project)),
+                        );
+                      } else if (value == 'delete') {
+                        ConfirmationBottomSheet.show(
+                          context: context,
+                          icon: Icons.delete_outline_rounded,
+                          title: 'Delete Project',
+                          message:
+                              'Are you sure you want to delete "${project.name}"?\nThis action cannot be undone.',
+                          confirmLabel: 'Delete',
+                          onConfirm: () => ref
+                              .read(projectListProvider.notifier)
+                              .deleteProject(project.id),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18, color: Color(0xFF1A1A2E)),
+                            SizedBox(width: 12),
+                            Text('Edit'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
                         value: 'delete',
-                        child: Text('Delete', style: TextStyle(color: Colors.red))),
-                  ],
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                            SizedBox(width: 12),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

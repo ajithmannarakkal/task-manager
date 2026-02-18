@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/presentation/widgets/common_button.dart';
 import '../../../../core/presentation/widgets/common_text.dart';
 import '../../../../core/presentation/widgets/common_text_field.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/project.dart';
 import '../providers/project_provider.dart';
 
@@ -23,12 +24,23 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
 
   bool get isEditing => widget.project != null;
 
+  final List<Map<String, dynamic>> _colorOptions = [
+    {'color': const Color(0xFF6C63FF), 'label': 'Purple'},
+    {'color': const Color(0xFF2196F3), 'label': 'Blue'},
+    {'color': const Color(0xFF4CAF50), 'label': 'Green'},
+    {'color': const Color(0xFFFF5722), 'label': 'Red'},
+    {'color': const Color(0xFFFF9800), 'label': 'Orange'},
+    {'color': const Color(0xFF009688), 'label': 'Teal'},
+    {'color': const Color(0xFFE91E63), 'label': 'Pink'},
+    {'color': const Color(0xFF795548), 'label': 'Brown'},
+  ];
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.project?.name ?? '');
     _descController = TextEditingController(text: widget.project?.description ?? '');
-    _selectedColor = widget.project?.color ?? Colors.blue;
+    _selectedColor = widget.project?.color ?? const Color(0xFF6C63FF);
   }
 
   @override
@@ -42,15 +54,15 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
     if (_formKey.currentState!.validate()) {
       if (isEditing) {
         final updated = widget.project!.copyWith(
-          name: _nameController.text,
-          description: _descController.text,
+          name: _nameController.text.trim(),
+          description: _descController.text.trim(),
           color: _selectedColor,
         );
         ref.read(projectListProvider.notifier).updateProject(updated);
       } else {
         ref.read(projectListProvider.notifier).addProject(
-              _nameController.text,
-              _descController.text,
+              _nameController.text.trim(),
+              _descController.text.trim(),
               _selectedColor,
             );
       }
@@ -61,6 +73,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Project' : 'New Project'),
       ),
@@ -71,60 +84,129 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
           text: isEditing ? 'Save Changes' : 'Create Project',
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CommonTextField(
                 controller: _nameController,
                 labelText: 'Project Name',
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter a name' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Project name is required'
+                    : null,
               ),
               const SizedBox(height: 16),
               CommonTextField(
                 controller: _descController,
-                labelText: 'Description',
+                labelText: 'Description (optional)',
                 maxLines: 3,
               ),
-              const SizedBox(height: 24),
-              const CommonText(
+              const SizedBox(height: 28),
+
+              // Color Picker
+              CommonText(
                 'Project Color',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.labelLarge,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
-                children: [
-                  Colors.blue,
-                  Colors.red,
-                  Colors.green,
-                  Colors.orange,
-                  Colors.purple,
-                  Colors.teal,
-                ].map((color) {
+                runSpacing: 12,
+                children: _colorOptions.map((option) {
+                  final color = option['color'] as Color;
                   final isSelected = _selectedColor == color;
                   return GestureDetector(
                     onTap: () => setState(() => _selectedColor = color),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
                         border: isSelected
-                            ? Border.all(color: Colors.black, width: 3)
+                            ? Border.all(color: AppTheme.textPrimary, width: 3)
+                            : Border.all(color: Colors.transparent, width: 3),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  // ignore: deprecated_member_use
+                                  color: color.withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
                             : null,
                       ),
                       child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white)
+                          ? const Icon(Icons.check, color: Colors.white, size: 20)
                           : null,
                     ),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 32),
+
+              // Preview Card
+              CommonText(
+                'Preview',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.borderColor),
+                  boxShadow: [
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
+                        color: _selectedColor.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.folder_rounded,
+                          color: _selectedColor, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _nameController.text.isEmpty
+                                ? 'Project Name'
+                                : _nameController.text,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Tap to view tasks',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
             ],

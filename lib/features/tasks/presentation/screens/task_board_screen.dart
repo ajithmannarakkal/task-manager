@@ -4,7 +4,6 @@ import '../../domain/entities/task.dart';
 import '../providers/task_provider.dart';
 import '../screens/task_detail_screen.dart';
 import '../widgets/kanban_column.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 import '../../../../features/projects/domain/entities/project.dart';
 
@@ -20,14 +19,6 @@ class TaskBoardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(project.name),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(authNotifierProvider.notifier).logout();
-            },
-          ),
-        ],
       ),
       body: tasksAsync.when(
         data: (tasks) => _buildBoard(context, tasks),

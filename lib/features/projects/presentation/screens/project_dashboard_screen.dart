@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/presentation/widgets/confirmation_bottom_sheet.dart';
 import '../../../tasks/presentation/screens/task_board_screen.dart';
@@ -14,24 +15,37 @@ class ProjectDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final projectsAsync = ref.watch(projectListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Projects'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
-            onPressed: () => ConfirmationBottomSheet.show(
-              context: context,
-              icon: Icons.logout_rounded,
-              title: 'Logout',
-              message: 'Are you sure you want to logout?\nYou will need to sign in again.',
-              confirmLabel: 'Logout',
-              onConfirm: () => ref.read(authNotifierProvider.notifier).logout(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        ConfirmationBottomSheet.show(
+          context: context,
+          icon: Icons.exit_to_app_rounded,
+          title: 'Exit App',
+          message: 'Are you sure you want to exit the application?',
+          confirmLabel: 'Exit',
+          onConfirm: () => SystemNavigator.pop(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('My Projects'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              tooltip: 'Logout',
+              onPressed: () => ConfirmationBottomSheet.show(
+                context: context,
+                icon: Icons.logout_rounded,
+                title: 'Logout',
+                message: 'Are you sure you want to logout?\nYou will need to sign in again.',
+                confirmLabel: 'Logout',
+                onConfirm: () => ref.read(authNotifierProvider.notifier).logout(),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       body: projectsAsync.when(
         data: (projects) {
           if (projects.isEmpty) {
@@ -78,6 +92,7 @@ class ProjectDashboardScreen extends ConsumerWidget {
         },
         label: const Text('New Project'),
         icon: const Icon(Icons.add),
+      ),
       ),
     );
   }

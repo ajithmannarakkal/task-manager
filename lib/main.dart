@@ -37,13 +37,18 @@ class MyApp extends ConsumerWidget {
       home: authState.when(
         data: (user) {
           if (user != null) {
-            return const ProjectDashboardScreen();
+            return const ProjectDashboardScreen(key: ValueKey('dashboard'));
           } else {
-            return const LoginScreen();
+            return const LoginScreen(key: ValueKey('login'));
           }
         },
-        loading: () => const SplashScreen(),
-        error: (err, stack) => const LoginScreen(),
+        // Only show splash screen on initial startup (no data yet)
+        loading: () => authState.hasValue 
+            ? (authState.valueOrNull != null 
+                ? const ProjectDashboardScreen(key: ValueKey('dashboard')) 
+                : const LoginScreen(key: ValueKey('login')))
+            : const SplashScreen(key: ValueKey('splash')),
+        error: (err, stack) => const LoginScreen(key: ValueKey('login')),
       ),
     );
   }

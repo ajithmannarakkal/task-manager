@@ -54,7 +54,10 @@ class AuthNotifier extends AsyncNotifier<AuthUser?> {
   }
 
   Future<void> login(String email, String password) async {
-    state = const AsyncValue.loading();
+    // Keep previous state (which is null) while loading to prevent 
+    // main.dart from jumping back to the SplashScreen via its .loading branch
+    state = const AsyncValue<AuthUser?>.loading().copyWithPrevious(state);
+    
     final login = ref.read(loginUseCaseProvider);
     final result = await login(LoginParams(email: email, password: password));
 
